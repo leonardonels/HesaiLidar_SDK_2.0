@@ -13,8 +13,9 @@ else()
 cmake_policy(SET CMP0065 NEW)
 endif()  
 
-if(FIND_CUDA)
-    find_package(CUDA )
+# uncomment to use gpu acceleration
+find_package(CUDA QUIET) 
+
 if(${CUDA_FOUND})
     project(CommonModules LANGUAGES CXX CUDA)
 	set(CUDA_SOURCE_PROPERTY_FORMAT OBJ)
@@ -25,9 +26,6 @@ if(${CUDA_FOUND})
 	set(CUDA_NVCC_FLAGS -arch=sm_61;-O3;-G;-g;-std=c++14)#根据具体GPU性能更改算力参数
 	link_directories($ENV{CUDA_PATH}/lib/x64)
     set(WITH_UDPPARSERGPU ON CACHE BOOL "Build UdpParserGpu code")
-else(${CUDA_FOUND})
-	MESSAGE(STATUS "cuda not found!")
-endif(${CUDA_FOUND})
 endif()
 
 set(CMAKE_BUILD_TYPE ON)
