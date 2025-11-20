@@ -173,7 +173,7 @@ typedef struct DriverParam
   DecoderParam decoder_param;  
   ///< The frame id of LiDAR message    
   std::string frame_id = "hesai";  
-  bool use_gpu = false;
+  bool use_gpu = true;
   uint8_t log_level = HESAI_LOG_INFO | HESAI_LOG_WARNING | HESAI_LOG_ERROR | HESAI_LOG_FATAL; //
   uint8_t log_Target = HESAI_LOG_TARGET_CONSOLE;
   std::string log_path = "./log.log";
