@@ -14,8 +14,8 @@ if(MSVC)
 set(CMAKE_GENERATOR_PLATFORM x64)
 endif()
 
-if(FIND_CUDA)
-    find_package(CUDA )
+find_package(CUDA QUIET)
+
 if(${CUDA_FOUND})
   project(CommonModules LANGUAGES CXX CUDA)
 	set(CUDA_SOURCE_PROPERTY_FORMAT OBJ)
@@ -26,9 +26,6 @@ if(${CUDA_FOUND})
 	link_directories($ENV{CUDA_PATH}/lib/x64)
 
   add_definitions(-DUSE_CUDA)
-else(${CUDA_FOUND})
-	MESSAGE(STATUS "cuda not found!")
-endif(${CUDA_FOUND})
 endif()
 
 
