@@ -93,6 +93,8 @@ typedef struct DecoderParam
   float default_frame_frequency = DEFAULT_MAX_MULTI_FRAME_NUM;
   bool update_function_safety_flag = false;
   uint16_t echo_mode_filter = 0;
+  bool min_distance_filter_enabled = false;
+  float min_distance_sq = 0.0f;
 } DecoderParam;
 
 ///< The LiDAR input parameter
@@ -160,6 +162,9 @@ typedef struct InputParam
 
   std::string ros_recv_correction_topic = NULL_TOPIC;
   std::string ros_recv_packet_topic = NULL_TOPIC;
+
+  float minDistanceSq = 4.0;  // minimum distance square, default is 2m, 4.0 = 2.0 * 2.0
+  bool bubble_filter = true;
 
 
 } InputParam;

@@ -170,6 +170,11 @@ struct FrameDecodeParam {
   bool use_cuda;
   float frame_frequency;
   float default_frame_frequency;
+  bool min_distance_filter_enabled_;
+  float min_distance_sq_;
+
+  bool minDistanceFilterEnable() const { return min_distance_filter_enabled_; }
+  float getMinDistanceSq() const { return min_distance_sq_; }
 
   FrameDecodeParam() {
     use_timestamp_type = 0;
@@ -189,6 +194,8 @@ struct FrameDecodeParam {
     use_cuda = false;
     frame_frequency = -1;
     default_frame_frequency = DEFAULT_MAX_MULTI_FRAME_NUM;
+    min_distance_filter_enabled_ = true;
+    min_distance_sq_ = 4.0f;
   }
   void UpdateRotation(int rotation) {
     if (abs(rotation_flag) == 10240) return;
@@ -215,6 +222,8 @@ struct FrameDecodeParam {
     echo_mode_filter = param.decoder_param.echo_mode_filter;
     ParseChannelFovFilterPath(param.decoder_param.channel_fov_filter_path, config.channel_fov_filter);
     ParseMultiFovFilterRanges(param.decoder_param.multi_fov_filter_ranges, config.multi_fov_filter_ranges);
+    min_distance_filter_enabled_ = param.decoder_param.min_distance_filter_enabled;
+    min_distance_sq_ = param.decoder_param.min_distance_sq;
     frame_frequency = param.decoder_param.frame_frequency;
     default_frame_frequency = param.decoder_param.default_frame_frequency;
     if (default_frame_frequency == 0) {

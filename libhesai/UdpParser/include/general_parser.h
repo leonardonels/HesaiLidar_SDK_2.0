@@ -249,7 +249,7 @@ class GeneralParser {
   void loadFiretimeSuccess() { get_firetime_file_ = true; firetime_load_sequence_num_++; }
   void loadDcfSuccess() { get_dcf_file_ = true; dcf_load_sequence_num_++; }
   virtual int FrameProcess(LidarDecodedFrame<T_Point> &frame);
-
+  void SetMinDistanceFilter(bool enabled, float min_dist_sq);
 
 
   PacketSeqnumLossMessage seqnum_loss_message_;

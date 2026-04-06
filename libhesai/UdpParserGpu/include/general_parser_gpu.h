@@ -49,6 +49,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "general_parser.h"
 #include "logger.h"
 #include "general_struct_gpu.h"
+#include "cuda_filter.h"
 
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
@@ -103,7 +104,9 @@ class GeneralParserGpu {
   virtual int ComputeXYZI(LidarDecodedFrame<T_Point> &frame) = 0;
   void DoRemake(float azi_, float elev_, const RemakeConfig &remake_config, int &point_idx);
   int IsChannelFovFilter(int fov, int channel_index, FrameDecodeParam &param);
- protected:
+  // cuda_filters
+  void SetMinDistanceFilterEnable(bool enable, float min_distance_sq) { min_distance_filter_enable_ = enable; min_distance_sq_ = min_distance_sq; }
+  protected:
   bool* get_correction_file_;
   bool* get_firetime_file_;
   uint32_t* correction_load_sequence_num_;
@@ -124,6 +127,10 @@ class GeneralParserGpu {
   LidarOpticalCenter optical_center;
   uint8_t* point_cloud_cu_;
   bool init_suc_flag_ = true;
+
+  // cuda_filters
+  bool min_distance_filter_enable_ = true;
+  float min_distance_sq_ = 4.0;  // minimum distance square, default is 2m, 4.0 = 2.0 * 2.0
 };
 }
 }

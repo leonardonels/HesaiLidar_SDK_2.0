@@ -437,6 +437,12 @@ int Udp1_4Parser<T_Point>::ComputeXYZI(LidarDecodedFrame<T_Point> &frame, uint32
       float y = xyDistance * this->cos_all_angle_[(azimuth)];
       float z = distance * this->sin_all_angle_[(elevation)];
       this->TransformPoint(x, y, z, frame.fParam.transform);
+      if (frame.fParam.minDistanceFilterEnable()) {
+        if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(z))
+          x = y = z = 0.f;
+        if ((x*x + y*y + z*z) < frame.fParam.getMinDistanceSq())
+          x = y = z = 0.f;
+      }
       int point_index_rerank = point_index + point_num; 
       GeneralParser<T_Point>::DoRemake(azimuth, elevation, frame.fParam.remake_config, point_index_rerank); 
       if(point_index_rerank >= 0) { 

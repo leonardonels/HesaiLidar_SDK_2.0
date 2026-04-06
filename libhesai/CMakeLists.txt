@@ -88,6 +88,7 @@ if(WITH_UDPPARSER)
     if(WITH_UDPPARSERGPU)
         add_library(udpParserGpu_lib 
             UdpParserGpu/udp_parser_gpu.cu
+            UdpParserGpu/src/cuda_filter.cu
             UdpParserGpu/src/general_parser_gpu.cu
             UdpParserGpu/src/udp_p40_parser_gpu.cu
             UdpParserGpu/src/udp_p64_parser_gpu.cu
