@@ -10,11 +10,6 @@ set(WITH_PTCS_USE ON CACHE BOOL "Use Ptcs")
 # uncomment to use gpu acceleration
 find_package(CUDA QUIET)
 
-<<<<<<< HEAD
-=======
-find_package(CUDA QUIET)
-
->>>>>>> 9fc860336698ced27ad5d2e18cbada48dc8a99f3
 if(${CUDA_FOUND})
   	project(CommonModules LANGUAGES CXX CUDA)
 	set(CUDA_SOURCE_PROPERTY_FORMAT OBJ)
