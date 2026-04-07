@@ -7,9 +7,14 @@ set(WITH_PTCS_USE ON CACHE BOOL "Use Ptcs")
 # set(FIND_CUDA ON CACHE BOOL "Find CUDA")
 
 
+# uncomment to use gpu acceleration
+find_package(CUDA QUIET)
 
-if(FIND_CUDA)
-    find_package(CUDA )
+<<<<<<< HEAD
+=======
+find_package(CUDA QUIET)
+
+>>>>>>> 9fc860336698ced27ad5d2e18cbada48dc8a99f3
 if(${CUDA_FOUND})
   	project(CommonModules LANGUAGES CXX CUDA)
 	set(CUDA_SOURCE_PROPERTY_FORMAT OBJ)
@@ -18,9 +23,6 @@ if(${CUDA_FOUND})
 	set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 	set(CUDA_NVCC_FLAGS -arch=sm_61;-O3;-G;-g;-std=c++14)#根据具体GPU性能更改算力参数
 	link_directories($ENV{CUDA_PATH}/lib/x64)
-else(${CUDA_FOUND})
-	MESSAGE(STATUS "cuda not found!")
-endif(${CUDA_FOUND})
 endif()
 
 
@@ -51,10 +53,8 @@ target_include_directories(hesai_sdk_lib PUBLIC
 ) 
 
 
-if(FIND_CUDA)
 if(${CUDA_FOUND})
 	target_compile_definitions(hesai_sdk_lib PUBLIC USE_CUDA=1)
-endif(${CUDA_FOUND})
 endif()
 
 
