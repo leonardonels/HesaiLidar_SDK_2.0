@@ -177,18 +177,6 @@ int compute_1_4_cuda(uint8_t* point_cloud_cu_, CudaPointXYZAER* points_cu_, uint
     firetimes, fParam->firetimes_flag, fParam->rotation_flag, fParam->distance_correction_flag, fParam->transform, optical_center, points_cu_, is_jt128);
   cudaDeviceSynchronize();
   cudaSafeCall(cudaGetLastError(), ReturnCode::CudaXYZComputingError);
-  // isFinite filter
-  if (fParam->minDistanceFilterEnable()) {
-    std::uint32_t total_points = packet_num * block_num * channel_num;
-    std::uint32_t filter_threads = 768;
-    std::uint32_t filter_block = (total_points + filter_threads -1)/filter_threads;
-    cuda_filters::isFiniteFilter<<<filter_block, filter_threads>>>(points_cu_, total_points);
-    cudaDeviceSynchronize();
-    // minDistance filter
-    cuda_filters::distanceFilter<<<filter_block, filter_threads>>>(points_cu_, total_points, fParam->getMinDistanceSq());
-    cudaDeviceSynchronize();
-  }
-  
   return 0;
 }
 

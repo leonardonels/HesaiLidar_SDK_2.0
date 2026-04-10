@@ -27,6 +27,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ************************************************************************************************/
 #ifndef Udp1_4_PARSER_GPU_H_
 #define Udp1_4_PARSER_GPU_H_
+#include <cmath>
 #include "general_parser_gpu.h"
 #include "udp_protocol_v1_4.h"
 namespace hesai
@@ -129,6 +130,9 @@ class Udp1_4ParserGpu: public GeneralParserGpu<T_Point>{
             continue;
           }
           auto &point = this->points_[point_index + blockid * frame.laser_num + channel_index];
+          if (!std::isfinite(point.x) || !std::isfinite(point.y) || !std::isfinite(point.z)) continue;
+          if (frame.fParam.minDistanceFilterEnable() &&
+              (point.x * point.x + point.y * point.y + point.z * point.z) < frame.fParam.getMinDistanceSq()) continue;
           if (this->IsChannelFovFilter(point.azimuthCalib, channel_index, frame.fParam) == 1) {
             continue;
           }
