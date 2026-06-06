@@ -83,6 +83,25 @@ typedef struct UpgradeProgress {
 } UpgradeProgress;
 typedef void *(*UpgradeProgressFunc_t)(void *);
 
+// Lidar status fields parsed from PTC command 0x09 (GetLidarStatus).
+// WARNING: this 49-byte / 8-temperature layout is XT32M1X-derived
+// (XT32M1X_TCP_API.pdf) and is NOT guaranteed for other models such as the
+// OT128. The byte offsets and sensor count must be re-verified against the
+// target model's PTC/TCP API before the temperature values are trusted.
+// GetLidarStatus(LidarStatus&) validates the response size defensively and
+// leaves valid==false on any mismatch (no out-of-bounds reads).
+struct LidarStatus {
+  uint32_t system_uptime = 0;          // seconds
+  uint16_t motor_speed = 0;            // RPM
+  int32_t  temperature[8] = {0};       // 0.01 degrees Celsius (signed; receiving-board sensors can be negative)
+  uint8_t  gps_pps_lock = 0;
+  uint8_t  gps_gprmc_status = 0;
+  uint32_t startup_times = 0;
+  uint32_t total_operation_time = 0;   // seconds
+  uint8_t  ptp_status = 0;
+  bool     valid = false;
+};
+
 class PtcClient {
  public:
   using Mutex = std::mutex;
@@ -117,6 +136,11 @@ class PtcClient {
 
   u8Array_t GetCorrectionInfo();
   int GetLidarStatus();
+  // Structured variant of GetLidarStatus(): parses the 0x09 response into `out`.
+  // Returns 0 and sets out.valid=true only when the response is present and at
+  // least the expected size; otherwise returns -1 and leaves out.valid=false.
+  // See the LidarStatus comment re: the XT32M1X-derived layout caveat.
+  int GetLidarStatus(LidarStatus& out);
   int GetPTPDiagnostics (u8Array_t &dataOut, uint8_t query_type);
   int GetPTPLockOffset(u8Array_t &dataOut);
   int GetCorrectionInfo(u8Array_t &dataOut);

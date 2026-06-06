@@ -467,6 +467,47 @@ int PtcClient::GetLidarStatus() {
   }
 }
 
+int PtcClient::GetLidarStatus(LidarStatus& out) {
+  out.valid = false;
+  // Don't poll a socket that isn't connected (e.g. pcap/serial runs where
+  // ptc_client_ is null or never opened) -- callers guard on this too.
+  if (!IsOpen()) {
+    LogWarning("GetLidarStatus: PTC connection not open");
+    return -1;
+  }
+  u8Array_t dataIn, dataOut;
+  int ret = this->QueryCommand(dataIn, dataOut, kPTCGetLidarStatus);
+  if (ret != 0 || dataOut.empty()) {
+    return -1;
+  }
+  // XT32M1X-derived layout (XT32M1X_TCP_API.pdf):
+  //   uint32 uptime + uint16 motor_speed + 8 x uint32 temperature
+  //   + uint8 gps_pps + uint8 gps_gprmc + uint32 startup_times
+  //   + uint32 total_operation_time + uint8 ptp_status = 49 bytes.
+  // This is NOT guaranteed for the OT128 -- re-verify against the OT128
+  // PTC/TCP API (spec 6.1) before trusting the values. Bail out on a short
+  // response instead of reading past the buffer with the cumulative offsets.
+  const size_t kExpected = 49;
+  if (dataOut.size() < kExpected) {
+    LogWarning("GetLidarStatus: unexpected response size %zu (expected >= %zu), skipping",
+               dataOut.size(), kExpected);
+    return -1;
+  }
+  size_t offset = 0;
+  out.system_uptime = extractField<uint32_t>(dataOut, offset);
+  out.motor_speed   = extractField<uint16_t>(dataOut, offset);
+  for (int i = 0; i < 8; i++) {
+    out.temperature[i] = static_cast<int32_t>(extractField<uint32_t>(dataOut, offset));
+  }
+  out.gps_pps_lock         = extractField<uint8_t>(dataOut, offset);
+  out.gps_gprmc_status     = extractField<uint8_t>(dataOut, offset);
+  out.startup_times        = extractField<uint32_t>(dataOut, offset);
+  out.total_operation_time = extractField<uint32_t>(dataOut, offset);
+  out.ptp_status           = extractField<uint8_t>(dataOut, offset);
+  out.valid = true;
+  return 0;
+}
+
 int PtcClient::GetCorrectionInfo(u8Array_t &dataOut) {
   u8Array_t dataIn;
   int ret = -1;

@@ -26,6 +26,7 @@ TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF TH
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ************************************************************************************************/
 #pragma once
+#include <chrono>
 #include "lidar.h"
 #ifdef USE_CUDA
 #include "udp_parser_gpu.h"
@@ -47,6 +48,12 @@ private:
   std::function<void(const uint8_t&, const u8Array_t&)> ptp_cb_;
   std::function<void(const FaultMessageInfo&)> fault_message_cb_;
   std::function<void(const LidarImuData&)> imu_cb_;
+  // Lidar status (PTC 0x09) callback + wall-clock poll bookkeeping. Polled on a
+  // time interval (NOT per-frame) from the same loop thread as the PTP/correction
+  // polls, so all PTC access stays serialised on the single shared socket.
+  std::function<void(const LidarStatus&)> status_cb_;
+  double status_poll_period_s_ = 1.0;
+  std::chrono::steady_clock::time_point last_status_poll_ = std::chrono::steady_clock::now();
   bool is_thread_runing_;
   uint32_t device_ip_address_ = 0;
   uint16_t device_udp_port_ = 0;
@@ -342,6 +349,21 @@ public:
               ptp_cb_(ptp_lock_offset.front(), ptp_status);
             }
           }
+          // Poll lidar status (temperatures) on a wall-clock interval rather than
+          // per-frame; guarded so it never touches a null/closed PTC socket.
+          if (status_cb_ && lidar_ptr_->ptc_client_ != nullptr && lidar_ptr_->ptc_client_->IsOpen())
+          {
+            auto now = std::chrono::steady_clock::now();
+            if (std::chrono::duration<double>(now - last_status_poll_).count() >= status_poll_period_s_)
+            {
+              last_status_poll_ = now;
+              LidarStatus status;
+              if (lidar_ptr_->ptc_client_->GetLidarStatus(status) == 0 && status.valid)
+              {
+                status_cb_(status);
+              }
+            }
+          }
           if (correction_cb_ && lidar_ptr_->frame_.frame_index % 1000 == 1)
           {
             correction_cb_(lidar_ptr_->correction_string_);
@@ -456,6 +478,13 @@ public:
   }
   void RegRecvCallback(const std::function<void (const LidarImuData&)>& callback) {
     imu_cb_ = callback;
+  }
+  void RegRecvCallback(const std::function<void (const LidarStatus&)>& callback) {
+    status_cb_ = callback;
+  }
+  // Set how often the lidar status (temperature) PTC poll fires, in seconds.
+  void SetStatusPollPeriod(double period_s) {
+    if (period_s > 0.0) status_poll_period_s_ = period_s;
   }
 };
 
