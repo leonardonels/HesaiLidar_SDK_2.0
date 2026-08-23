@@ -72,6 +72,7 @@ class Udp4_3ParserGpu: public GeneralParserGpu<T_Point>{
     if (!*this->get_correction_file_) return int(ReturnCode::CorrectionsUnloaded);  
     if (!this->init_suc_flag_) return int(ReturnCode::CudaInitError);
     this->reMalloc(frame.maxPacketPerFrame, frame.maxPointPerPacket, frame.point_cloud_size);
+    if (!this->init_suc_flag_) return int(ReturnCode::CudaInitError);  // reMalloc can clear it
     cudaSafeCall(cudaMemcpy(this->point_cloud_cu_, frame.point_cloud_raw_data,
                             frame.point_cloud_size * frame.packet_num, 
                             cudaMemcpyHostToDevice), ReturnCode::CudaMemcpyHostToDeviceError);

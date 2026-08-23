@@ -121,6 +121,22 @@ void GeneralParserGpu<T_Point>::reMalloc(uint32_t maxPackets, uint32_t maxPoints
     cudaSafeMalloc((void**)&point_cloud_cu_, point_cloud_size * maxPackets * sizeof(uint8_t));
     if (points_cu_ == nullptr || point_cloud_cu_ == nullptr || points_ == nullptr) {
       init_suc_flag_ = false;
+      // A PARTIAL failure is the dangerous one: points_cu_ can be null while
+      // point_cloud_cu_ is valid, so the H2D memcpy every ComputeXYZI does right
+      // after this call succeeds and the kernel then writes through the null
+      // output pointer -- an illegal access that kills the CUDA context for the
+      // rest of the process. Release everything so that memcpy fails cleanly
+      // instead, which guards all parser variants from this one place.
+      cudaSafeFree(points_cu_);       points_cu_      = nullptr;
+      cudaSafeFree(point_cloud_cu_);  point_cloud_cu_ = nullptr;
+      delete[] points_;               points_         = nullptr;
+      // reMalloc only does work when the requested geometry differs from the
+      // cached one, so leaving the cache set to the geometry that just failed
+      // would mean never retrying. Clear it and let a later frame try again
+      // once memory is available.
+      maxPackets_cu_ = 0;
+      maxPoints_cu_ = 0;
+      point_cloud_size_cu_ = 0;
     }
   }
 }

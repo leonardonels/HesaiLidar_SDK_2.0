@@ -44,7 +44,11 @@ inline void cudaSafeMalloc(void** gpu, size_t size) {
   if (err != cudaSuccess) { 
     LogError("cudaMalloc failed, error code (%s)!", 
             cudaGetErrorString(err));                   
-    gpu = nullptr;                                        
+    // cudaMalloc leaves *devPtr unmodified on failure, and assigning the local
+    // `gpu` here left the caller holding either uninitialised memory or, after a
+    // reMalloc, a freed device pointer -- which then passed every != nullptr
+    // check and reached a kernel. Null the CALLER's pointer.
+    *gpu = nullptr;
   }
 }
 
