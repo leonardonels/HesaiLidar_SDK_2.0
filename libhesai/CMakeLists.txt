@@ -14,7 +14,9 @@ cmake_policy(SET CMP0065 NEW)
 endif()  
 
 # uncomment to use gpu acceleration
-find_package(CUDA QUIET) 
+find_package(CUDAToolkit QUIET)
+set(CUDA_FOUND ${CUDAToolkit_FOUND})
+set(CUDA_INCLUDE_DIRS ${CUDAToolkit_INCLUDE_DIRS})
 
 if(${CUDA_FOUND})
     project(CommonModules LANGUAGES CXX CUDA)
